@@ -181,12 +181,15 @@
 
     isCreatingSubject = true;
     try {
-      await api.createAdminSubject(newSubjectName.trim());
+      const created = await api.createAdminSubject(newSubjectName.trim());
       toast.success('Предмет успешно создан');
       newSubjectName = '';
       newSubjectModalOpen = false;
       await loadData();
       subjectsStore.load();
+      if (created?.id) {
+        newPageSubjectId = created.id;
+      }
     } catch (err: any) {
       toast.error(err.message || 'Ошибка создания предмета');
     } finally {
@@ -500,12 +503,41 @@
     </div>
 
     <div class="form-group">
-      <label for="new-subject">Предмет:</label>
-      <select id="new-subject" class="form-control" bind:value={newPageSubjectId} required>
-        {#each subjects as subj}
-          <option value={subj.id}>{subj.name}</option>
-        {/each}
-      </select>
+      <div class="field-header-row">
+        <label for="new-subject">Предмет:</label>
+        <button
+          type="button"
+          class="btn-text-action"
+          onclick={() => {
+            newPageModalOpen = false;
+            newSubjectModalOpen = true;
+          }}
+        >
+          + Создать новый предмет
+        </button>
+      </div>
+
+      {#if subjects.length === 0}
+        <div class="no-subjects-notice">
+          <p>⚠️ У вас пока нет созданных предметов.</p>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            onclick={() => {
+              newPageModalOpen = false;
+              newSubjectModalOpen = true;
+            }}
+          >
+            + Создать предмет
+          </button>
+        </div>
+      {:else}
+        <select id="new-subject" class="form-control" bind:value={newPageSubjectId} required>
+          {#each subjects as subj}
+            <option value={subj.id}>{subj.name}</option>
+          {/each}
+        </select>
+      {/if}
     </div>
   </form>
 
@@ -1060,5 +1092,42 @@
 
   .btn-danger:hover {
     background: #a51d1a;
+  }
+
+  .field-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .btn-text-action {
+    background: none;
+    border: none;
+    color: var(--accent-color, #2383e2);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+  }
+
+  .btn-text-action:hover {
+    color: #1b6fc1;
+  }
+
+  .no-subjects-notice {
+    padding: 10px 12px;
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 6px;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .no-subjects-notice p {
+    margin: 0;
+    color: #795548;
   }
 </style>
