@@ -11,6 +11,7 @@
   import { toast } from '../lib/toast';
   import Modal from '../components/Modal.svelte';
   import AdminAssetTray from '../components/AdminAssetTray.svelte';
+  import { convertDocxToMarkdown, type DocxConvertResult } from '../lib/docx';
 
   interface Props {
     pageId?: string;
@@ -64,6 +65,15 @@
   let isPublishing = $state(false);
   let pendingImportText = $state<string | null>(null);
   let fileInputImportEl: HTMLInputElement | null = null;
+
+  // DOCX Import State
+  let docxModalOpen = $state(false);
+  let isConvertingDocx = $state(false);
+  let pendingDocxResult = $state<DocxConvertResult | null>(null);
+  let docxImportMode = $state<'replace' | 'append'>('replace');
+  let applyExtractedTitle = $state(true);
+  let docxFileName = $state('');
+  let fileInputDocxEl: HTMLInputElement | null = null;
 
   // Dynamic Editor Component Reference
   let editorInstance = $state<any>(null);
@@ -509,6 +519,77 @@
       toast.success('Текст Markdown импортирован');
     }
   }
+
+  function handleTriggerDocxImport() {
+    fileInputDocxEl?.click();
+  }
+
+  async function handleDocxFileSelected(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const files = target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    docxFileName = file.name;
+    isConvertingDocx = true;
+
+    try {
+      const buffer = await file.arrayBuffer();
+
+      const result = await convertDocxToMarkdown(buffer, {
+        uploadImage: async (blob, filename, contentType) => {
+          if (!pageId) return '';
+          const imgFile = new File([blob], filename, { type: contentType });
+          const uploaded = await api.uploadAdminPageAsset(pageId, imgFile);
+          return uploaded.url;
+        },
+      });
+
+      // Refresh assets list so newly uploaded images show up immediately in sidebar
+      if (pageId && result.uploadedImagesCount > 0) {
+        try {
+          assets = await api.getAdminPageAssets(pageId);
+        } catch {}
+      }
+
+      pendingDocxResult = result;
+      docxModalOpen = true;
+    } catch (err: any) {
+      console.error('Ошибка конвертации DOCX:', err);
+      toast.error('Не удалось прочитать файл DOCX: ' + (err.message || 'неверный формат'));
+    } finally {
+      isConvertingDocx = false;
+      target.value = '';
+    }
+  }
+
+  function confirmDocxImport() {
+    if (!pendingDocxResult) return;
+
+    if (applyExtractedTitle && pendingDocxResult.title) {
+      if (!title || title === 'Новая практическая работа' || docxImportMode === 'replace') {
+        title = pendingDocxResult.title;
+      }
+    }
+
+    if (docxImportMode === 'replace') {
+      markdown = pendingDocxResult.markdown;
+    } else {
+      markdown = markdown
+        ? `${markdown}\n\n${pendingDocxResult.markdown}`
+        : pendingDocxResult.markdown;
+    }
+
+    const imgMsg =
+      pendingDocxResult.imageCount > 0
+        ? ` (изображений: ${pendingDocxResult.imageCount})`
+        : '';
+    toast.success(`Документ Word успешно импортирован${imgMsg}!`);
+
+    docxModalOpen = false;
+    pendingDocxResult = null;
+    markDirty();
+  }
 </script>
 
 <div class="editor-page-container">
@@ -571,6 +652,23 @@
         accept=".md,text/markdown"
         bind:this={fileInputImportEl}
         onchange={handleImportFileSelected}
+        style="display: none;"
+      />
+
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        title="Импорт методички из документа Word (.docx)"
+        disabled={isConvertingDocx}
+        onclick={handleTriggerDocxImport}
+      >
+        {isConvertingDocx ? '⏳ Конвертация...' : '📄 Импорт .docx'}
+      </button>
+      <input
+        type="file"
+        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        bind:this={fileInputDocxEl}
+        onchange={handleDocxFileSelected}
         style="display: none;"
       />
 
@@ -864,6 +962,107 @@
       onclick={confirmImport}
     >
       Заменить текст
+    </button>
+  {/snippet}
+</Modal>
+
+<!-- Word / DOCX Import Modal -->
+<Modal
+  open={docxModalOpen}
+  title="Импорт документа Word (.docx)"
+  onclose={() => (docxModalOpen = false)}
+>
+  {#if pendingDocxResult}
+    <div class="docx-dialog">
+      <div class="docx-meta-card">
+        <div class="docx-meta-row">
+          <span class="meta-label">Файл:</span>
+          <span class="meta-value font-mono">{docxFileName}</span>
+        </div>
+        {#if pendingDocxResult.title}
+          <div class="docx-meta-row">
+            <span class="meta-label">Заголовок:</span>
+            <span class="meta-value"><strong>{pendingDocxResult.title}</strong></span>
+          </div>
+        {/if}
+        <div class="docx-meta-row">
+          <span class="meta-label">Изображения:</span>
+          <span class="meta-value">
+            {pendingDocxResult.imageCount > 0 ? `Найдено ${pendingDocxResult.imageCount}` : 'Без изображений'}
+            {#if pendingDocxResult.uploadedImagesCount > 0}
+              <span class="badge-success"> (загружено на сервер: {pendingDocxResult.uploadedImagesCount})</span>
+            {/if}
+          </span>
+        </div>
+      </div>
+
+      {#if pendingDocxResult.title}
+        <label class="docx-checkbox-row">
+          <input
+            type="checkbox"
+            bind:checked={applyExtractedTitle}
+          />
+          <span>Использовать заголовок из документа как название работы: <em>«{pendingDocxResult.title}»</em></span>
+        </label>
+      {/if}
+
+      <div class="docx-action-section">
+        <span class="section-title">Куда вставить текст:</span>
+        <div class="docx-radio-group">
+          <label class="docx-radio-option">
+            <input
+              type="radio"
+              name="docx-import-mode"
+              value="replace"
+              bind:group={docxImportMode}
+            />
+            <div>
+              <strong>Заменить текущий текст</strong>
+              <p>Текущее содержимое редактора будет полностью заменено текстом из файла Word</p>
+            </div>
+          </label>
+          <label class="docx-radio-option">
+            <input
+              type="radio"
+              name="docx-import-mode"
+              value="append"
+              bind:group={docxImportMode}
+            />
+            <div>
+              <strong>Добавить в конец</strong>
+              <p>Текст документа будет добавлен после текущего содержимого статьи</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="docx-preview-box">
+        <div class="preview-title">Предпросмотр полученного Markdown:</div>
+        <pre class="preview-content"><code>{pendingDocxResult.markdown.slice(0, 800)}{pendingDocxResult.markdown.length > 800 ? '\n\n... [остальной текст обрезан в окне предпросмотра]' : ''}</code></pre>
+      </div>
+
+      {#if pendingDocxResult.warnings.length > 0}
+        <div class="docx-warnings-note">
+          <small>ℹ️ Примечание: {pendingDocxResult.warnings.slice(0, 3).join(', ')}</small>
+        </div>
+      {/if}
+    </div>
+  {/if}
+
+  {#snippet footer()}
+    <button
+      type="button"
+      class="btn btn-secondary"
+      onclick={() => (docxModalOpen = false)}
+    >
+      Отмена
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      onclick={confirmDocxImport}
+    >
+      Импортировать в редактор
     </button>
   {/snippet}
 </Modal>
@@ -1195,5 +1394,147 @@
 
   .btn-danger:hover {
     background: #a51d1a;
+  }
+
+  /* DOCX Import Dialog Styles */
+  .docx-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-size: 14px;
+    color: #37352f;
+  }
+
+  .docx-meta-card {
+    background: #f7f6f3;
+    border: 1px solid #ebe9e4;
+    border-radius: 6px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .docx-meta-row {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 13px;
+  }
+
+  .docx-meta-row .meta-label {
+    color: #787774;
+    min-width: 90px;
+    font-weight: 500;
+  }
+
+  .font-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+  }
+
+  .badge-success {
+    color: #0f7b6c;
+    font-weight: 500;
+  }
+
+  .docx-checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+    line-height: 1.4;
+  }
+
+  .docx-checkbox-row input {
+    margin-top: 2px;
+  }
+
+  .docx-action-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .docx-action-section .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #37352f;
+  }
+
+  .docx-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .docx-radio-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid #e9e8e5;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #ffffff;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .docx-radio-option:hover {
+    background: #fbfbfa;
+    border-color: #d3d1cb;
+  }
+
+  .docx-radio-option input {
+    margin-top: 3px;
+  }
+
+  .docx-radio-option strong {
+    font-size: 13px;
+    display: block;
+    color: #37352f;
+  }
+
+  .docx-radio-option p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #787774;
+  }
+
+  .docx-preview-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .docx-preview-box .preview-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #787774;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .docx-preview-box .preview-content {
+    margin: 0;
+    padding: 10px 12px;
+    background: #f7f6f3;
+    border: 1px solid #e9e8e5;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    max-height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #37352f;
+  }
+
+  .docx-warnings-note {
+    font-size: 12px;
+    color: #d9730d;
   }
 </style>
