@@ -1,0 +1,59 @@
+# ==============================================================================
+# LabNotes: Caddy HTTPS Configuration (Автоматический SSL / Let's Encrypt)
+# ==============================================================================
+# ИНСТРУКЦИЯ ПО АКТИВАЦИИ:
+# 1. Замените "your-domain.com" и "www.your-domain.com" на ваш реальный домен.
+# 2. Замените "admin@your-domain.com" на ваш рабочий email (для Let's Encrypt).
+# 3. Скопируйте данный файл поверх основного Caddyfile:
+#    cp caddy/Caddyfile.https.example caddy/Caddyfile
+# 4. Перезагрузите Caddy на лету (без остановки сайта):
+#    docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+# ==============================================================================
+
+your-domain.com, www.your-domain.com {
+    # Caddy автоматически:
+    # 1. Получит бесплатный SSL-сертификат от Let's Encrypt / ZeroSSL
+    # 2. Будет автоматически продлевать его каждые 60 дней
+    # 3. Перенаправит весь входящий HTTP (порт 80) трафик на HTTPS (порт 443)
+    # 4. Включит современные протоколы HTTP/2 и HTTP/3 (QUIC)
+
+    # --------------------------------------------------------------------------
+    # ВАРИАНТ А: Автоматический сертификат Let's Encrypt (Рекомендуется)
+    tls admin@your-domain.com
+
+    # ВАРИАНТ Б: Собственные сертификаты (положите файлы в ./caddy/certs/):
+    # tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem
+    # --------------------------------------------------------------------------
+
+    # Проксирование запросов в контейнер приложения LabNotes
+    reverse_proxy app:8080 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto https
+    }
+
+    # Сжатие ответов (Zstandard и Gzip)
+    encode zstd gzip
+
+    # Максимальный размер загрузки файлов (для больших DOCX и изображений)
+    request_body {
+        max_size 100MB
+    }
+
+    # Заголовки безопасности браузера
+    header {
+        # HSTS (форсирование HTTPS в браузере)
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        # Защита от MIME-sniffing и Clickjacking
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Логирование
+    log {
+        output stdout
+        format console
+    }
+}

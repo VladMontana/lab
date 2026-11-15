@@ -1,18 +1,17 @@
-# 🌐 Руководство: Подключение своего домена и HTTPS (SSL)
+# 🌐 Руководство: Подключение своего домена и HTTPS через Caddy
 
-В проект добавлен готовый обратный прокси-сервер **Nginx** и контейнер **Certbot** для автоматического получения и продления бесплатных SSL-сертификатов Let's Encrypt.
+В проект добавлен веб-сервер и обратный прокси **Caddy**.  
+Главное преимущество Caddy перед Nginx — **полностью автоматический HTTPS**: вам **не нужен Certbot**, не нужно вручную вводить команды выпуска сертификатов и настраивать cron-задачи. Caddy сам получает бесплатный SSL-сертификат (Let's Encrypt / ZeroSSL), устанавливает его, продлевает каждые 60 дней и автоматически перенаправляет трафик с HTTP на HTTPS.
 
 ---
 
-## 📁 Структура конфигураций
+## 📁 Структура файлов
 
 ```text
-nginx/
-├── nginx.conf                 # Главная оптимизированная конфигурация Nginx (Gzip, 100M лимит, воркеры)
-├── conf.d/
-│   ├── default.conf           # Активная конфигурация HTTP (порт 80, ACME challenge, прокси в LabNotes)
-│   └── https.conf.example     # Готовый шаблон HTTPS (порт 443, SSL, 301 редирект с HTTP, HSTS)
-└── certs/                     # Папка для ваших собственных SSL сертификатов (если используете не Let's Encrypt)
+caddy/
+├── Caddyfile                 # Активный конфигурационный файл (по умолчанию режим HTTP, порт 80)
+├── Caddyfile.https.example   # Готовый шаблон для продакшена с HTTPS и вашим доменом
+└── certs/                    # Папка для собственных SSL-сертификатов (если не используете Let's Encrypt)
 ```
 
 ---
@@ -21,93 +20,88 @@ nginx/
 
 ### Шаг 1: Привязка домена (DNS)
 У вашего регистратора домена (Reg.ru, Beget, Cloudflare, Namecheap и др.) добавьте **A-записи**, указывающие на публичный IP-адрес вашего сервера:
-* `@` (или имя домена, например `labnotes.ru`) &rarr; `IP_ВАШЕГО_СЕРВЕРА`
+* `@` (или ваш домен, например `labnotes.ru`) &rarr; `IP_ВАШЕГО_СЕРВЕРА`
 * `www` (или поддомен) &rarr; `IP_ВАШЕГО_СЕРВЕРА`
 
 ---
 
-### Шаг 2: Первичный запуск (HTTP)
-Nginx уже настроен и готов принимать запросы по HTTP (порт 80):
+### Шаг 2: Первичный запуск (Режим HTTP)
+По умолчанию в файле `caddy/Caddyfile` уже настроен режим HTTP (порт 80):
 ```bash
 docker compose up -d
 ```
-После этого сайт сразу откроется по вашему домену (или IP) на 80 порту.
+После этого сайт сразу начнёт открываться в браузере по вашему IP или домену по обычному `http://`.
 
 ---
 
-### Шаг 3: Получение SSL-сертификата
+### Шаг 3: Включение HTTPS и получение SSL-сертификата
 
-#### Вариант А: Бесплатный Let's Encrypt через Certbot (Рекомендуется)
-Выполните одну команду, заменив `yourdomain.ru` и email на свои:
-```bash
-docker compose run --rm certbot certonly --webroot --webroot-path /var/www/certbot \
-  -d yourdomain.ru -d www.yourdomain.ru \
-  --email admin@yourdomain.ru --agree-tos --no-eff-email
-```
-Сертификаты автоматически сохранятся в защищенный том `labnotes_certbot_certs`.
-
-#### Вариант Б: Собственные SSL-сертификаты
-Если у вас уже есть сертификаты (например, от Cloudflare или коммерческого CA):
-1. Положите файл полного сертификата в `nginx/certs/fullchain.pem`
-2. Положите файл приватного ключа в `nginx/certs/privkey.pem`
-
----
-
-### Шаг 4: Активация HTTPS в Nginx
-
-1. Откройте файл `nginx/conf.d/https.conf.example` и укажите ваш домен:
-   ```nginx
-   server_name yourdomain.ru www.yourdomain.ru;
+1. Откройте файл `caddy/Caddyfile.https.example`.
+2. Замените `your-domain.com` на ваш реальный домен, а `admin@your-domain.com` на ваш email:
+   ```caddyfile
+   yourdomain.ru, www.yourdomain.ru {
+       tls admin@yourdomain.ru
+       
+       reverse_proxy app:8080 {
+           header_up Host {host}
+           header_up X-Real-IP {remote_host}
+           header_up X-Forwarded-For {remote_host}
+           header_up X-Forwarded-Proto https
+       }
+       
+       encode zstd gzip
+       request_body {
+           max_size 100MB
+       }
+   }
    ```
-   *(Также проверьте путь к сертификатам: для Let's Encrypt оставьте как есть, для своих сертификатов раскомментируйте Вариант Б)*.
-
-2. Замените рабочий файл `default.conf` на HTTPS-конфигурацию:
+3. Скопируйте этот шаблон поверх основного `Caddyfile`:
    * **Linux / macOS:**
      ```bash
-     cp nginx/conf.d/https.conf.example nginx/conf.d/default.conf
+     cp caddy/Caddyfile.https.example caddy/Caddyfile
      ```
    * **Windows (PowerShell):**
      ```powershell
-     Copy-Item nginx/conf.d/https.conf.example nginx/conf.d/default.conf
+     Copy-Item caddy/Caddyfile.https.example caddy/Caddyfile
      ```
-
-3. Примените конфигурацию на лету (без простоя сайта):
+4. Примените конфигурацию на лету (без остановки контейнеров):
    ```bash
-   docker compose exec nginx nginx -s reload
+   docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
    ```
 
-Теперь Nginx:
-* Принимает безопасные соединения по **HTTPS (порт 443)** с протоколами TLS 1.2 и TLS 1.3.
-* Все запросы с **HTTP (порт 80)** автоматически перенаправляет на HTTPS с 301 кодом (Permanent Redirect).
-* Сохраняет доступ к пути `/.well-known/acme-challenge/` для автопродления сертификатов.
+**Готово!** Caddy сам свяжется с Let's Encrypt, подтвердит владение доменом, получит SSL-сертификат и включит безопасное соединение. Все запросы на `http://` будут автоматически перенаправляться на `https://`.
 
 ---
 
-### Шаг 5: Настройка переменных окружения
+### Шаг 4: Настройка переменных окружения в `.env`
 
-В файле `.env` на сервере обновите параметры для работы по безопасному протоколу:
+На сервере в файле `.env` укажите ваш домен и включите защищённые куки:
 ```env
 APP_BASE_URL=https://yourdomain.ru
 COOKIE_SECURE=true
 ```
-И примените изменения:
+После чего перезапустите сервис приложения:
 ```bash
 docker compose up -d app
 ```
 
 ---
 
-## 🔄 Автоматическое продление сертификатов Let's Encrypt
+## ❓ Частые вопросы
 
-Сертификаты Let's Encrypt действуют 90 дней.
+### Как использовать собственные сертификаты (например, Cloudflare Origin Certificate)?
+Если вы не хотите выпускать сертификат через Let's Encrypt, а имеете свои файлы:
+1. Положите файлы в папку `caddy/certs/cert.pem` и `caddy/certs/key.pem`.
+2. В блоке вашего домена в `Caddyfile` укажите:
+   ```caddyfile
+   tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem
+   ```
+3. Перезагрузите Caddy:
+   ```bash
+   docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+   ```
 
-* **Вручную проверить и продлить:**
-  ```bash
-  docker compose run --rm certbot renew
-  docker compose exec nginx nginx -s reload
-  ```
-* **Или запустить фоновый демон продления:**
-  ```bash
-  docker compose --profile certbot up -d certbot
-  ```
-  *(Демон Certbot будет автоматически проверять необходимость обновления каждые 12 часов).*
+### Как посмотреть логи Caddy?
+```bash
+docker compose logs -f caddy
+```
