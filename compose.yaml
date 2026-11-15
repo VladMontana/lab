@@ -1,0 +1,36 @@
+name: labnotes
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: labnotes:latest
+    container_name: labnotes
+    restart: unless-stopped
+    ports:
+      # Localhost loopback binding only: prevents direct WAN exposure without reverse proxy
+      - "127.0.0.1:8080:8080"
+    volumes:
+      # Persistent storage volume for SQLite database, WAL files, and media uploads
+      - data:/app/data
+    environment:
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8080
+      - APP_BASE_URL=http://localhost:8080
+      - DATA_DIR=/app/data
+      - DATABASE_URL=sqlite:///app/data/labnotes.sqlite?mode=rwc
+      - COOKIE_SECURE=false
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - SESSION_SECRET=${SESSION_SECRET:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  data:
+    name: labnotes_data

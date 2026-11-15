@@ -1,0 +1,47 @@
+# Version control
+.git
+.gitignore
+
+# Agent metadata and knowledge graph
+.agents
+graphify-out
+
+# Build artifacts
+target
+backend/target
+node_modules
+frontend/node_modules
+frontend/dist
+
+# Persistent data and local databases
+data
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Test suites and test docs
+e2e_tests
+backend/tests
+TEST_INFRA.md
+TEST_READY.md
+
+# Documentation and project files
+README.md
+STATUS.md
+AGENT_PLAN.md
+PROJECT.md
+Dockerfile
+compose.yaml
+
+# IDE and temporary files
+.vscode
+.idea
+*.log
+temp
+tmp
