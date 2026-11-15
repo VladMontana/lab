@@ -29,7 +29,7 @@
 <aside class="sidebar" class:open={$mobileSidebarOpen} aria-label="Боковое меню">
   <div class="sidebar-header">
     <a href="/" class="sidebar-logo" onclick={closeMobileDrawer}>
-      <span class="sidebar-logo-icon">📓</span>
+      <img src="/book-icon.svg" alt="LabNotes" class="sidebar-logo-icon" width="22" height="22" />
       <span>LabNotes</span>
     </a>
     <button

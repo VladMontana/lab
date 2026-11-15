@@ -43,7 +43,7 @@
       ☰
     </button>
     <a href="/" class="mobile-brand" onclick={closeMobileDrawer}>
-      <span>📓</span>
+      <img src="/book-icon.svg" alt="LabNotes" class="mobile-logo-icon" width="22" height="22" />
       <span>LabNotes</span>
     </a>
     <div style="width: 36px;"></div>

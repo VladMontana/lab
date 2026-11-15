@@ -116,6 +116,14 @@ input, textarea, select {
   gap: 0.5rem;
 }
 
+.mobile-logo-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: inline-block;
+  image-rendering: pixelated;
+}
+
 .mobile-menu-btn {
   display: flex;
   align-items: center;
@@ -217,7 +225,11 @@ input, textarea, select {
 }
 
 .sidebar-logo-icon {
-  font-size: 1.25rem;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: inline-block;
+  image-rendering: pixelated;
 }
 
 .sidebar-close-btn {
