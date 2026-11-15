@@ -147,6 +147,27 @@ input, textarea, select {
   padding: 2.5rem 2rem 4rem 2rem;
 }
 
+/* Wide layout for desktop editor (>= 769px) - preserves standard mobile max-width */
+@media (min-width: 769px) {
+  .content-area.content-area-wide {
+    max-width: calc(100% - 3rem);
+    padding: 1.5rem 1.5rem 4rem 1.5rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .content-area.content-area-wide {
+    max-width: 1680px;
+    padding: 2rem 2rem 4rem 2rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  .content-area.content-area-wide {
+    max-width: 1850px;
+  }
+}
+
 /* Mobile Sidebar Drawer Overlay */
 .drawer-backdrop {
   display: none;

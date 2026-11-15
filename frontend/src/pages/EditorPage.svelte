@@ -1072,9 +1072,16 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    max-width: 1300px;
+    width: 100%;
+    max-width: 100%;
     margin: 0 auto;
     padding: 20px 24px 60px;
+  }
+
+  @media (min-width: 769px) {
+    .editor-page-container {
+      padding: 0 0 60px;
+    }
   }
 
   .editor-top-bar {

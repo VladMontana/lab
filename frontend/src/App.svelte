@@ -64,7 +64,10 @@
 
   <!-- Main Content View Area -->
   <main class="main-wrapper">
-    <div class="content-area">
+    <div
+      class="content-area"
+      class:content-area-wide={$router.name === 'admin-editor' || $router.name === 'admin-editor-new'}
+    >
       {#if $router.name === 'catalog'}
         <Catalog />
       {:else if $router.name === 'reader'}
