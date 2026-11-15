@@ -180,6 +180,44 @@ md.renderer.rules.table_close = function (tokens, idx, options, env, self) {
   return defaultTableClose(tokens, idx, options, env, self) + '</div>';
 };
 
+// Custom Rule 6: Text Alignment & Academic Figure Captions
+md.core.ruler.push('text_align', function (state) {
+  for (let i = 0; i < state.tokens.length; i++) {
+    const token = state.tokens[i];
+    if (token.type === 'paragraph_open' || token.type === 'heading_open') {
+      const inlineToken = state.tokens[i + 1];
+      if (inlineToken && inlineToken.type === 'inline' && inlineToken.children) {
+        const text = inlineToken.content.trim();
+
+        // 1. Center alignment marker: -> text <-
+        if (/^->\s*.+?\s*<-$/.test(text)) {
+          token.attrJoin('class', 'text-center');
+          const first = inlineToken.children[0];
+          if (first && first.type === 'text') {
+            first.content = first.content.replace(/^\s*->\s*/, '');
+          }
+          const last = inlineToken.children[inlineToken.children.length - 1];
+          if (last && last.type === 'text') {
+            last.content = last.content.replace(/\s*<-\s*$/, '');
+          }
+        }
+        // 2. Right alignment marker: -> text
+        else if (/^->\s*.+/.test(text) && !text.endsWith('<-')) {
+          token.attrJoin('class', 'text-right');
+          const first = inlineToken.children[0];
+          if (first && first.type === 'text') {
+            first.content = first.content.replace(/^\s*->\s*/, '');
+          }
+        }
+        // 3. Academic figure captions: "Рисунок 1...", "Рис. 1..."
+        else if (token.type === 'paragraph_open' && /^\s*(?:Рисунок|Рис\.?)\s*\d+/i.test(text)) {
+          token.attrJoin('class', 'caption-center');
+        }
+      }
+    }
+  }
+});
+
 // ============================================================================
 // Strict DOMPurify Sanitization Options
 // ============================================================================
@@ -227,7 +265,7 @@ const DOMPURIFY_CONFIG = {
     'table', 'thead', 'tbody', 'tr', 'th', 'td',
     'a', 'img',
     'strong', 'b', 'em', 'i', 'del', 's', 'sub', 'sup', 'mark',
-    'div', 'span', 'button',
+    'div', 'span', 'button', 'center',
   ],
 
   // Permitted attributes
@@ -268,6 +306,29 @@ function getPurifier(): any {
   return null;
 }
 
+// Preprocess explicit HTML center/align tags into markdown alignment markers
+function preprocessAlignment(source: string): string {
+  return source
+    .replace(/<center>([\s\S]*?)<\/center>/gi, (_match, inner) => {
+      return inner
+        .split('\n')
+        .map((line: string) => (line.trim() ? `-> ${line.trim()} <-` : ''))
+        .join('\n');
+    })
+    .replace(/<(?:div|p)\s+align=["']center["']>([\s\S]*?)<\/(?:div|p)>/gi, (_match, inner) => {
+      return inner
+        .split('\n')
+        .map((line: string) => (line.trim() ? `-> ${line.trim()} <-` : ''))
+        .join('\n');
+    })
+    .replace(/<(?:div|p)\s+align=["']right["']>([\s\S]*?)<\/(?:div|p)>/gi, (_match, inner) => {
+      return inner
+        .split('\n')
+        .map((line: string) => (line.trim() ? `-> ${line.trim()}` : ''))
+        .join('\n');
+    });
+}
+
 // ============================================================================
 // Public Markdown Pipeline Export
 // ============================================================================
@@ -288,8 +349,9 @@ export function renderMarkdown(markdown: string): RenderResult {
     slugCounts: {},
   };
 
-  // 1. Render through markdown-it with custom rules
-  const rawHtml = md.render(markdown, env);
+  // 1. Preprocess alignment tags and render through markdown-it
+  const preprocessed = preprocessAlignment(markdown);
+  const rawHtml = md.render(preprocessed, env);
 
   // 2. Pass through DOMPurify with strict XSS neutralization rules
   const purifier = getPurifier();

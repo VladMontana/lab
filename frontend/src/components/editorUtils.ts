@@ -191,3 +191,47 @@ export function insertImage(view: EditorView, alt: string = 'Описание и
   });
   view.focus();
 }
+
+/**
+ * Toggles center alignment markers (-> text <-) on current line or selection.
+ */
+export function toggleCenter(view: EditorView): void {
+  const { state } = view;
+  const { from, to, empty } = state.selection.main;
+
+  if (empty) {
+    const line = state.doc.lineAt(from);
+    const text = line.text;
+    const match = text.match(/^\s*->\s*(.*?)\s*<-\s*$/);
+    if (match) {
+      // Toggle off: remove -> and <-
+      view.dispatch({
+        changes: { from: line.from, to: line.to, insert: match[1] },
+      });
+    } else {
+      // Toggle on: wrap line
+      const trimmed = text.trim();
+      const insert = trimmed ? `-> ${trimmed} <-` : '->  <-';
+      view.dispatch({
+        changes: { from: line.from, to: line.to, insert },
+        selection: { anchor: trimmed ? line.from + insert.length : line.from + 3 },
+      });
+    }
+  } else {
+    const selText = state.sliceDoc(from, to);
+    const match = selText.match(/^\s*->\s*(.*?)\s*<-\s*$/);
+    if (match) {
+      view.dispatch({
+        changes: { from, to, insert: match[1] },
+        selection: { anchor: from, head: from + match[1].length },
+      });
+    } else {
+      const insert = `-> ${selText.trim()} <-`;
+      view.dispatch({
+        changes: { from, to, insert },
+        selection: { anchor: from, head: from + insert.length },
+      });
+    }
+  }
+  view.focus();
+}

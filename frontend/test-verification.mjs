@@ -78,6 +78,24 @@ assert.ok(res.html.includes('<div class="table-wrapper"><table'), 'Must wrap tab
 // Check external link target="_blank"
 assert.ok(res.html.includes('target="_blank"'), 'Must set target="_blank" on external link');
 assert.ok(res.html.includes('rel="noopener noreferrer"'), 'Must set rel="noopener noreferrer"');
+
+// Check text alignment & academic captions
+const alignTest = renderMarkdown(`
+![](image.png)
+
+Рисунок 10 – Проверка IP-адреса в Windows 10
+
+-> Центрированный текст <-
+
+<center>HTML центрированный текст</center>
+
+-> Текст прижатый вправо
+`);
+assert.ok(alignTest.html.includes('class="caption-center"'), 'Must apply caption-center to "Рисунок 10..."');
+assert.ok(alignTest.html.includes('class="text-center"'), 'Must apply text-center to "-> ... <-"');
+assert.ok(alignTest.html.includes('class="text-right"'), 'Must apply text-right to "-> text"');
+assert.ok(!alignTest.html.includes('&lt;center&gt;'), 'Must not leak raw &lt;center&gt; tag');
+console.log('✓ Text alignment and caption centering tests passed');
 console.log('✓ Markdown rendering and TOC tests passed');
 
 console.log('--- 3. Testing Strict Sanitization (XSS Defense) ---');

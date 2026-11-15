@@ -30,6 +30,7 @@
     insertLink,
     insertCodeBlock,
     toggleList,
+    toggleCenter,
   } from './editorUtils';
 
   // Svelte 5 Props Interface
@@ -351,6 +352,15 @@
         onclick={() => view && toggleWrap(view, '*')}
       >
         <em>I</em>
+      </button>
+      <button
+        type="button"
+        class="toolbar-btn"
+        title="По центру (-> текст <-)"
+        aria-label="Выровнять по центру"
+        onclick={() => view && toggleCenter(view)}
+      >
+        ≡
       </button>
       <button
         type="button"

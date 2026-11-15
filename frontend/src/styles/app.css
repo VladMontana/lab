@@ -718,7 +718,7 @@ input, textarea, select {
   max-width: 100%;
   height: auto;
   border-radius: var(--radius-md);
-  margin: 1.25rem 0;
+  margin: 1.5rem auto 0.75rem auto;
   display: block;
   cursor: zoom-in;
   border: 1px solid var(--border-color);
@@ -728,6 +728,24 @@ input, textarea, select {
 .markdown-body img:hover,
 .markdown-image:hover {
   opacity: 0.95;
+}
+
+/* Text Alignment and Academic Captions */
+.markdown-body .text-center {
+  text-align: center;
+}
+
+.markdown-body .text-right {
+  text-align: right;
+}
+
+.markdown-body .caption-center,
+.markdown-body p.caption-center {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-top: -0.25rem;
+  margin-bottom: 1.5rem;
 }
 
 /* Inline Code */
