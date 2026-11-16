@@ -196,11 +196,12 @@ input, textarea, select {
   bottom: 0;
   left: 0;
   width: var(--sidebar-width);
+  max-width: 85vw;
   background-color: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  z-index: 80;
+  z-index: 100;
   overflow-y: auto;
 }
 
@@ -1299,6 +1300,7 @@ input, textarea, select {
     transform: translateX(-100%);
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--shadow-lg);
+    z-index: 100;
   }
 
   .sidebar.open {
