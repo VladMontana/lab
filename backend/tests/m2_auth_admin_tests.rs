@@ -14,7 +14,9 @@
 
 use axum::{
     body::Body,
+    extract::ConnectInfo,
     http::{header, Request, StatusCode},
+    Extension,
 };
 use backend::{
     config::Config,
@@ -67,6 +69,7 @@ impl TestContext {
             session_secret: "test_session_secret_32_characters_long".to_string(),
             max_image_bytes: 10 * 1024 * 1024,
             max_attachment_bytes: 50 * 1024 * 1024,
+            trusted_proxy_ips: vec!["127.0.0.1".parse().unwrap()],
         };
         config.ensure_directories().unwrap();
 
@@ -204,6 +207,9 @@ async fn test_auth_invalid_credentials() {
 async fn test_auth_rate_limiting_after_five_failed_attempts() {
     let ctx = TestContext::new().await;
 
+    let proxy_addr = "127.0.0.1:8080".parse().unwrap();
+    let app = ctx.app.clone().layer(Extension(ConnectInfo(proxy_addr)));
+
     for _ in 0..5 {
         let req = Request::builder()
             .method("POST")
@@ -213,7 +219,7 @@ async fn test_auth_rate_limiting_after_five_failed_attempts() {
             .body(Body::from(r#"{"username":"admin","password":"wrong"}"#))
             .unwrap();
 
-        let resp = ctx.app.clone().oneshot(req).await.unwrap();
+        let resp = app.clone().oneshot(req).await.unwrap();
         assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
     }
 
@@ -226,7 +232,7 @@ async fn test_auth_rate_limiting_after_five_failed_attempts() {
         .body(Body::from(r#"{"username":"admin","password":"wrong"}"#))
         .unwrap();
 
-    let resp = ctx.app.clone().oneshot(req).await.unwrap();
+    let resp = app.clone().oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::TOO_MANY_REQUESTS);
     assert!(resp.headers().contains_key(header::RETRY_AFTER));
     let bytes = resp.into_body().collect().await.unwrap().to_bytes();
@@ -242,7 +248,7 @@ async fn test_auth_rate_limiting_after_five_failed_attempts() {
         .body(Body::from(r#"{"username":"admin","password":"wrong"}"#))
         .unwrap();
 
-    let diff_resp = ctx.app.clone().oneshot(diff_req).await.unwrap();
+    let diff_resp = app.clone().oneshot(diff_req).await.unwrap();
     assert_eq!(diff_resp.status(), StatusCode::UNAUTHORIZED);
 }
 

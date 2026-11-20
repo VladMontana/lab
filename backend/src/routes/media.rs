@@ -152,18 +152,11 @@ pub async fn serve_media_handler(
         headers.insert(header::CONTENT_DISPOSITION, val);
     }
 
-    // Cache-Control
-    if is_public {
-        headers.insert(
-            header::CACHE_CONTROL,
-            HeaderValue::from_static("public, max-age=31536000, immutable"),
-        );
-    } else {
-        headers.insert(
-            header::CACHE_CONTROL,
-            HeaderValue::from_static("private, no-cache"),
-        );
-    }
+    // Visibility can change after publication; every reuse must reach the authorization gate.
+    headers.insert(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("private, no-store"),
+    );
 
     Ok(response)
 }

@@ -42,6 +42,7 @@ impl TestHarness {
             session_secret: "session_secret_32_chars_for_m6_tests".to_string(),
             max_image_bytes: 10 * 1024 * 1024,
             max_attachment_bytes: 50 * 1024 * 1024,
+            trusted_proxy_ips: Vec::new(),
         };
         config.ensure_directories().unwrap();
 
