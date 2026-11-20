@@ -1270,18 +1270,18 @@
   }
 
   .badge-published {
-    background: #d1e7dd;
-    color: #0f5132;
+    background: var(--color-success-bg, #d1e7dd);
+    color: var(--color-success, #0f5132);
   }
 
   .badge-modified {
-    background: #fff3cd;
-    color: #664d03;
+    background: var(--color-warning-bg, #fff3cd);
+    color: var(--color-warning, #664d03);
   }
 
   .badge-draft {
-    background: #e2e3e5;
-    color: #41464b;
+    background: var(--bg-tertiary, #e2e3e5);
+    color: var(--text-muted, #41464b);
   }
 
   .revision-indicator {
@@ -1409,12 +1409,12 @@
     flex-direction: column;
     gap: 14px;
     font-size: 14px;
-    color: #37352f;
+    color: var(--text-primary, #37352f);
   }
 
   .docx-meta-card {
-    background: #f7f6f3;
-    border: 1px solid #ebe9e4;
+    background: var(--bg-secondary, #f7f6f3);
+    border: 1px solid var(--border-color, #ebe9e4);
     border-radius: 6px;
     padding: 10px 14px;
     display: flex;
@@ -1430,7 +1430,7 @@
   }
 
   .docx-meta-row .meta-label {
-    color: #787774;
+    color: var(--text-muted, #787774);
     min-width: 90px;
     font-weight: 500;
   }
@@ -1482,16 +1482,16 @@
     align-items: flex-start;
     gap: 10px;
     padding: 8px 12px;
-    border: 1px solid #e9e8e5;
+    border: 1px solid var(--border-color, #e9e8e5);
     border-radius: 6px;
     cursor: pointer;
-    background: #ffffff;
+    background: var(--bg-primary, #ffffff);
     transition: background 0.15s, border-color 0.15s;
   }
 
   .docx-radio-option:hover {
-    background: #fbfbfa;
-    border-color: #d3d1cb;
+    background: var(--bg-hover, #fbfbfa);
+    border-color: var(--border-dark, #d3d1cb);
   }
 
   .docx-radio-option input {
@@ -1501,13 +1501,13 @@
   .docx-radio-option strong {
     font-size: 13px;
     display: block;
-    color: #37352f;
+    color: var(--text-primary, #37352f);
   }
 
   .docx-radio-option p {
     margin: 2px 0 0;
     font-size: 12px;
-    color: #787774;
+    color: var(--text-secondary, #787774);
   }
 
   .docx-preview-box {
@@ -1519,7 +1519,7 @@
   .docx-preview-box .preview-title {
     font-size: 12px;
     font-weight: 600;
-    color: #787774;
+    color: var(--text-muted, #787774);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -1527,8 +1527,8 @@
   .docx-preview-box .preview-content {
     margin: 0;
     padding: 10px 12px;
-    background: #f7f6f3;
-    border: 1px solid #e9e8e5;
+    background: var(--bg-secondary, #f7f6f3);
+    border: 1px solid var(--border-color, #e9e8e5);
     border-radius: 6px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 12px;
@@ -1537,11 +1537,11 @@
     overflow-y: auto;
     white-space: pre-wrap;
     word-break: break-word;
-    color: #37352f;
+    color: var(--text-primary, #37352f);
   }
 
   .docx-warnings-note {
     font-size: 12px;
-    color: #d9730d;
+    color: var(--color-warning, #d9730d);
   }
 </style>

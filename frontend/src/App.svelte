@@ -4,6 +4,7 @@
   import { auth, mobileSidebarOpen } from './lib/stores';
 
   import Sidebar from './components/Sidebar.svelte';
+  import ThemeToggle from './components/ThemeToggle.svelte';
   import Toast from './components/Toast.svelte';
   import Catalog from './pages/Catalog.svelte';
   import Reader from './pages/Reader.svelte';
@@ -46,7 +47,7 @@
       <img src="/book-icon.svg" alt="LabNotes" class="mobile-logo-icon" width="22" height="22" />
       <span>LabNotes</span>
     </a>
-    <div style="width: 36px;"></div>
+    <ThemeToggle variant="icon" />
   </header>
 
   <!-- Mobile Drawer Backdrop -->

@@ -21,9 +21,11 @@
     redo,
   } from '@codemirror/commands';
   import { markdown } from '@codemirror/lang-markdown';
-  import { syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
+  import { HighlightStyle, syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
+  import { tags } from '@lezer/highlight';
 
   import { renderMarkdown, handleCodeCopyClick, type RenderResult } from '../lib/markdown';
+  import Lightbox from './Lightbox.svelte';
   import {
     toggleWrap,
     toggleHeading,
@@ -63,6 +65,39 @@
   let uploadError = $state<string | null>(null);
   let isUploading = $state<boolean>(false);
   let isDraggingOver = $state<boolean>(false);
+  let previewLightbox = $state<{
+    images: Array<{ src: string; alt: string }>;
+    initialIndex: number;
+  } | null>(null);
+
+  function handlePreviewClick(event: MouseEvent) {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+
+    if (target.closest('[data-copy-btn]')) {
+      handleCodeCopyClick(event);
+      return;
+    }
+
+    if (target.matches('img[data-lightbox], .markdown-image, .preview-pane img')) {
+      const clickedImg = target as HTMLImageElement;
+      const container = target.closest('.preview-pane') || document;
+      const allImages = Array.from(
+        container.querySelectorAll<HTMLImageElement>('img[data-lightbox], .markdown-image, img')
+      );
+      const images = allImages.map((img) => ({
+        src: img.currentSrc || img.src,
+        alt: img.alt || '',
+      }));
+      const initialIndex = allImages.indexOf(clickedImg);
+
+      previewLightbox = {
+        images: images.length > 0 ? images : [{ src: clickedImg.currentSrc || clickedImg.src, alt: clickedImg.alt || '' }],
+        initialIndex: initialIndex >= 0 ? initialIndex : 0,
+      };
+      return;
+    }
+  }
 
   // Sync external viewMode changes
   $effect(() => {
@@ -88,7 +123,7 @@
     },
     '.cm-content': {
       padding: '16px 12px',
-      caretColor: 'var(--accent-color, #2383e2)',
+      caretColor: 'var(--accent, #2383e2)',
     },
     '.cm-line': {
       padding: '0 4px',
@@ -100,16 +135,32 @@
       userSelect: 'none',
     },
     '.cm-activeLine': {
-      backgroundColor: 'rgba(35, 131, 226, 0.04)',
+      backgroundColor: 'var(--bg-hover)',
     },
     '.cm-activeLineGutter': {
-      backgroundColor: 'rgba(35, 131, 226, 0.08)',
-      color: 'var(--accent-color, #2383e2)',
+      backgroundColor: 'var(--bg-active)',
+      color: 'var(--accent, #2383e2)',
     },
     '&.cm-focused': {
       outline: 'none',
     },
+    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
+      backgroundColor: 'var(--accent-light, rgba(35, 131, 226, 0.2)) !important',
+    },
   });
+
+  const customHighlightStyle = HighlightStyle.define([
+    { tag: tags.heading, color: 'var(--text-primary)', fontWeight: '600' },
+    { tag: tags.emphasis, fontStyle: 'italic' },
+    { tag: tags.strong, fontWeight: '700' },
+    { tag: tags.link, color: 'var(--accent)', textDecoration: 'underline' },
+    { tag: [tags.monospace, tags.literal], color: 'var(--color-danger, #eb5757)' },
+    { tag: tags.comment, color: 'var(--text-muted)' },
+    { tag: tags.keyword, color: 'var(--accent)' },
+    { tag: [tags.string, tags.character], color: 'var(--color-success, #27ae60)' },
+    { tag: tags.number, color: 'var(--color-warning, #d9730d)' },
+    { tag: [tags.meta, tags.processingInstruction], color: 'var(--text-secondary)' },
+  ]);
 
   onMount(() => {
     if (!editorContainerEl) return;
@@ -202,7 +253,7 @@
         bracketMatching(),
         highlightActiveLine(),
         markdown(),
-        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+        syntaxHighlighting(customHighlightStyle, { fallback: true }),
         cmPlaceholder(placeholder),
         editorTheme,
         customKeymap,
@@ -509,7 +560,7 @@
     <div
       class="preview-pane markdown-body"
       class:hidden={currentViewMode === 'editor'}
-      onclick={handleCodeCopyClick}
+      onclick={handlePreviewClick}
       role="region"
       aria-label="Предпросмотр Markdown"
     >
@@ -528,6 +579,14 @@
       <div class="drop-message">Перетащите изображение сюда для загрузки</div>
     </div>
   {/if}
+
+  {#if previewLightbox}
+    <Lightbox
+      images={previewLightbox.images}
+      initialIndex={previewLightbox.initialIndex}
+      onclose={() => (previewLightbox = null)}
+    />
+  {/if}
 </div>
 
 <style>
@@ -544,7 +603,7 @@
   }
 
   .codemirror-wrapper.drag-active {
-    border-color: var(--accent-color, #2383e2);
+    border-color: var(--accent, #2383e2);
   }
 
   .drop-overlay {
@@ -553,8 +612,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(35, 131, 226, 0.12);
-    border: 2px dashed var(--accent-color, #2383e2);
+    background: var(--accent-light, rgba(35, 131, 226, 0.12));
+    border: 2px dashed var(--accent, #2383e2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -564,11 +623,12 @@
 
   .drop-message {
     padding: 12px 24px;
-    background: #ffffff;
+    background: var(--bg-primary, #ffffff);
     border-radius: 6px;
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    color: var(--accent-color, #2383e2);
+    box-shadow: var(--shadow-md);
+    color: var(--accent, #2383e2);
+    border: 1px solid var(--border-color, #e0e0e0);
   }
 
   .editor-toolbar {
@@ -615,11 +675,11 @@
   }
 
   .toolbar-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--bg-hover);
   }
 
   .toolbar-btn:focus-visible {
-    outline: 2px solid var(--accent-color, #2383e2);
+    outline: 2px solid var(--accent, #2383e2);
   }
 
   .mode-btn {
@@ -630,7 +690,7 @@
   .mode-btn.active {
     background: var(--bg-primary, #ffffff);
     border-color: var(--border-color, #d0d0d0);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
     font-weight: 600;
   }
 
@@ -639,10 +699,10 @@
     align-items: center;
     gap: 8px;
     padding: 6px 12px;
-    background: #e8f4fd;
-    color: #1a73e8;
+    background: var(--accent-light, #e8f4fd);
+    color: var(--accent, #1a73e8);
     font-size: 13px;
-    border-bottom: 1px solid #d2e3fc;
+    border-bottom: 1px solid var(--border-color, #d2e3fc);
   }
 
   .upload-error-banner {
@@ -650,10 +710,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 6px 12px;
-    background: #fce8e6;
-    color: #c5221f;
+    background: var(--color-danger-bg, #fce8e6);
+    color: var(--color-danger, #c5221f);
     font-size: 13px;
-    border-bottom: 1px solid #fad2cf;
+    border-bottom: 1px solid var(--border-color, #fad2cf);
   }
 
   .close-btn {
