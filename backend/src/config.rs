@@ -24,6 +24,9 @@ pub enum ConfigError {
 
     #[error("Invalid number for {0} ('{1}'): {2}")]
     InvalidNumber(&'static str, String, String),
+
+    #[error("Invalid TRUSTED_PROXY_IPS entry '{0}': {1}")]
+    InvalidTrustedProxyIp(String, String),
 }
 
 #[derive(Debug, Clone)]
@@ -39,6 +42,7 @@ pub struct Config {
     pub session_secret: String,
     pub max_image_bytes: usize,
     pub max_attachment_bytes: usize,
+    pub trusted_proxy_ips: Vec<IpAddr>,
 }
 
 impl Config {
@@ -134,6 +138,19 @@ impl Config {
             Err(_) => 50 * 1024 * 1024, // 50 MiB default
         };
 
+        let trusted_proxy_ips = match std::env::var("TRUSTED_PROXY_IPS") {
+            Ok(value) if !value.trim().is_empty() => value
+                .split(',')
+                .map(|entry| {
+                    let entry = entry.trim();
+                    IpAddr::from_str(entry).map_err(|e| {
+                        ConfigError::InvalidTrustedProxyIp(entry.to_string(), e.to_string())
+                    })
+                })
+                .collect::<Result<Vec<_>, _>>()?,
+            _ => Vec::new(),
+        };
+
         Ok(Self {
             host,
             port,
@@ -146,6 +163,7 @@ impl Config {
             session_secret,
             max_image_bytes,
             max_attachment_bytes,
+            trusted_proxy_ips,
         })
     }
 

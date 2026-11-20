@@ -1,8 +1,8 @@
 //! Administrative authentication routes: login, logout, and current session check.
 
 use axum::{
-    extract::State,
-    http::{header, HeaderMap, StatusCode},
+    extract::{ConnectInfo, FromRequestParts, State},
+    http::{header, request::Parts, HeaderMap, StatusCode},
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
@@ -24,14 +24,32 @@ pub fn router() -> Router<AppState> {
         .route("/api/admin/me", get(me_handler))
 }
 
+pub struct MaybeConnectInfo(pub Option<ConnectInfo<std::net::SocketAddr>>);
+
+impl<S: Send + Sync> FromRequestParts<S> for MaybeConnectInfo {
+    type Rejection = std::convert::Infallible;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        _state: &S,
+    ) -> Result<Self, Self::Rejection> {
+        Ok(MaybeConnectInfo(parts.extensions.get::<ConnectInfo<std::net::SocketAddr>>().copied()))
+    }
+}
+
 /// POST /api/admin/login
 /// Authenticates admin via Argon2id with rate limiting and issues HttpOnly session cookie.
 pub async fn login_handler(
     State(state): State<AppState>,
     headers: HeaderMap,
+    MaybeConnectInfo(connect_info): MaybeConnectInfo,
     Json(payload): Json<LoginRequest>,
 ) -> AppResult<impl IntoResponse> {
-    let client_ip = resolve_client_ip(&headers, None);
+    let client_ip = resolve_client_ip(
+        &headers,
+        connect_info.as_ref(),
+        &state.config.trusted_proxy_ips,
+    );
 
     // 1. Check rate limiter
     if let Err(retry_after) = state.rate_limiter.check(client_ip) {

@@ -329,38 +329,43 @@ pub fn extract_session_cookie(headers: &HeaderMap) -> Option<String> {
         })
 }
 
-/// Resolves client IP address from proxy headers or TCP socket connection.
+/// Resolves the client IP from the socket peer and, for explicitly trusted
+/// proxies, the rightmost untrusted address in X-Forwarded-For.
 pub fn resolve_client_ip(
     headers: &HeaderMap,
     connect_info: Option<&ConnectInfo<SocketAddr>>,
+    trusted_proxy_ips: &[IpAddr],
 ) -> IpAddr {
-    // 1. Check X-Forwarded-For (take the first client IP)
-    if let Some(forwarded) = headers.get("x-forwarded-for") {
-        if let Ok(s) = forwarded.to_str() {
-            if let Some(first) = s.split(',').next() {
-                if let Ok(ip) = first.trim().parse::<IpAddr>() {
-                    return ip;
-                }
-            }
+    let fallback = IpAddr::V4(Ipv4Addr::LOCALHOST);
+    let peer = match connect_info {
+        Some(ConnectInfo(addr)) => addr.ip(),
+        None => return fallback,
+    };
+
+    if !trusted_proxy_ips.contains(&peer) {
+        return peer;
+    }
+
+    let forwarded = headers
+        .get("x-forwarded-for")
+        .and_then(|value| value.to_str().ok())
+        .map(|value| {
+            value
+                .split(',')
+                .filter_map(|entry| entry.trim().parse::<IpAddr>().ok())
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
+    // Walk the chain from the peer toward the client. Trusted entries may be
+    // proxies; the first untrusted address is the client identity.
+    for ip in forwarded.iter().rev() {
+        if !trusted_proxy_ips.contains(ip) {
+            return *ip;
         }
     }
 
-    // 2. Check X-Real-IP
-    if let Some(real_ip) = headers.get("x-real-ip") {
-        if let Ok(s) = real_ip.to_str() {
-            if let Ok(ip) = s.trim().parse::<IpAddr>() {
-                return ip;
-            }
-        }
-    }
-
-    // 3. Fallback to direct peer socket address
-    if let Some(ConnectInfo(addr)) = connect_info {
-        return addr.ip();
-    }
-
-    // 4. Default for tests where network socket is not bound
-    IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))
+    forwarded.first().copied().unwrap_or(peer)
 }
 
 // ============================================================================

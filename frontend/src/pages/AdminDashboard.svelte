@@ -853,7 +853,7 @@
   .pages-table th,
   .pages-table td {
     padding: 12px 14px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-color, #f0f0f0);
   }
 
   .pages-table th {
@@ -872,12 +872,13 @@
   }
 
   .page-title-link:hover {
-    color: var(--accent-color, #2383e2);
+    color: var(--accent, #2383e2);
     text-decoration: underline;
   }
 
   .subject-tag {
-    background: #f0f0f0;
+    background: var(--bg-tertiary, #f0f0f0);
+    color: var(--text-secondary, #37352f);
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 12px;
@@ -891,18 +892,18 @@
   }
 
   .badge-published {
-    background: #d1e7dd;
-    color: #0f5132;
+    background: var(--color-success-bg, #d1e7dd);
+    color: var(--color-success, #0f5132);
   }
 
   .badge-modified {
-    background: #fff3cd;
-    color: #664d03;
+    background: var(--color-warning-bg, #fff3cd);
+    color: var(--color-warning, #664d03);
   }
 
   .badge-draft {
-    background: #e2e3e5;
-    color: #41464b;
+    background: var(--bg-tertiary, #e2e3e5);
+    color: var(--text-muted, #41464b);
   }
 
   .revision-cell,

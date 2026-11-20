@@ -348,13 +348,13 @@
   }
 
   .asset-card:hover {
-    border-color: #c0c0c0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    border-color: var(--border-dark);
+    box-shadow: var(--shadow-sm);
   }
 
   .asset-preview {
     height: 90px;
-    background: #f0f0f0;
+    background: var(--bg-tertiary);
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -407,7 +407,7 @@
     align-items: center;
     gap: 4px;
     margin-top: auto;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--border-color, #f0f0f0);
     padding-top: 6px;
   }
 
@@ -415,8 +415,8 @@
     flex: 1;
     font-size: 11px;
     padding: 3px 6px;
-    background: #f5f5f5;
-    border: 1px solid #e0e0e0;
+    background: var(--bg-secondary, #f5f5f5);
+    border: 1px solid var(--border-color, #e0e0e0);
     border-radius: 4px;
     cursor: pointer;
     color: var(--text-primary, #37352f);
@@ -424,17 +424,17 @@
   }
 
   .card-btn:hover {
-    background: #e8e8e8;
+    background: var(--bg-hover, #e8e8e8);
   }
 
   .card-btn.danger {
     flex: 0 0 24px;
-    color: #c5221f;
+    color: var(--color-danger, #c5221f);
   }
 
   .card-btn.danger:hover {
-    background: #fce8e6;
-    border-color: #fad2cf;
+    background: var(--color-danger-bg, #fce8e6);
+    border-color: var(--color-danger, #fad2cf);
   }
 
   .modal-warning-subtext {
@@ -461,21 +461,21 @@
   }
 
   .btn-secondary {
-    background: #ffffff;
+    background: var(--bg-primary, #ffffff);
     border-color: var(--border-color, #e0e0e0);
     color: var(--text-primary, #37352f);
   }
 
   .btn-secondary:hover {
-    background: #f7f6f3;
+    background: var(--bg-hover, #f7f6f3);
   }
 
   .btn-danger {
-    background: #c5221f;
-    color: #ffffff;
+    background: var(--color-danger, #c5221f);
+    color: var(--text-inverse, #ffffff);
   }
 
   .btn-danger:hover {
-    background: #a51d1a;
+    opacity: 0.9;
   }
 </style>

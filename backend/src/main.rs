@@ -32,11 +32,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Initialize database pool and apply migrations
     let db = init_db(&config.database_url).await?;
 
-    // Handle CLI password reset command: backend --set-admin-password <password>
+    // Read reset credentials from the terminal without echoing them or accepting argv secrets.
     let args: Vec<String> = std::env::args().collect();
-    if args.len() >= 3 && (args[1] == "--set-admin-password" || args[1] == "set-admin-password") {
-        let new_password = &args[2];
-        backend::auth::reset_admin_password(&db, &config.admin_username, new_password).await?;
+    if args.get(1).is_some_and(|arg| arg == "--set-admin-password" || arg == "set-admin-password") {
+        if args.len() != 2 {
+            return Err("Usage: backend --set-admin-password (enter the password at the hidden prompt)".into());
+        }
+        let new_password = rpassword::prompt_password("New admin password: ")?;
+        let confirmation = rpassword::prompt_password("Confirm password: ")?;
+        if new_password != confirmation {
+            return Err("Passwords do not match".into());
+        }
+        backend::auth::reset_admin_password(&db, &config.admin_username, &new_password).await?;
         info!("Admin password successfully updated via CLI");
         return Ok(());
     }
@@ -56,7 +63,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     info!("Server listening on http://{}", addr);
 
     // Run Axum server
-    axum::serve(listener, app).await?;
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .await?;
 
     Ok(())
 }

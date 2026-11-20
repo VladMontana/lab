@@ -55,6 +55,7 @@ impl ConcurrencyTestContext {
             session_secret: "test_session_secret_32_characters_long".to_string(),
             max_image_bytes: 10 * 1024 * 1024,
             max_attachment_bytes: 50 * 1024 * 1024,
+            trusted_proxy_ips: Vec::new(),
         };
         config.ensure_directories().unwrap();
 
@@ -95,6 +96,7 @@ impl ConcurrencyTestContext {
             session_secret: "test_session_secret_32_characters_long".to_string(),
             max_image_bytes: 10 * 1024 * 1024,
             max_attachment_bytes: 50 * 1024 * 1024,
+            trusted_proxy_ips: Vec::new(),
         };
         config.ensure_directories().unwrap();
 

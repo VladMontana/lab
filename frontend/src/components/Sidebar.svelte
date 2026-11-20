@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { router } from '../lib/router';
   import { subjects, auth, mobileSidebarOpen } from '../lib/stores';
+  import ThemeToggle from './ThemeToggle.svelte';
 
   onMount(() => {
     subjects.load();
@@ -82,6 +83,7 @@
   </nav>
 
   <div class="sidebar-footer">
+    <ThemeToggle variant="sidebar" />
     {#if $auth.isAuthenticated && $auth.user}
       <div class="author-session-info">
         <a href="/admin" class="author-admin-link" onclick={closeMobileDrawer}>

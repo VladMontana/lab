@@ -16,7 +16,10 @@
   let tocItems = $state<TocItem[]>([]);
 
   // Lightbox state
-  let lightboxImage = $state<{ src: string; alt: string } | null>(null);
+  let lightboxData = $state<{
+    images: Array<{ src: string; alt: string }>;
+    initialIndex: number;
+  } | null>(null);
 
   let pageId = $derived($router.params.id);
 
@@ -63,10 +66,20 @@
 
     // 2. Handle Lightbox on images
     if (target.matches('img[data-lightbox], .markdown-image')) {
-      const img = target as HTMLImageElement;
-      lightboxImage = {
+      const clickedImg = target as HTMLImageElement;
+      const container = target.closest('.reader-body, .markdown-body') || document;
+      const allImages = Array.from(
+        container.querySelectorAll<HTMLImageElement>('img[data-lightbox], .markdown-image')
+      );
+      const images = allImages.map((img) => ({
         src: img.currentSrc || img.src,
         alt: img.alt || '',
+      }));
+      const initialIndex = allImages.indexOf(clickedImg);
+
+      lightboxData = {
+        images: images.length > 0 ? images : [{ src: clickedImg.currentSrc || clickedImg.src, alt: clickedImg.alt || '' }],
+        initialIndex: initialIndex >= 0 ? initialIndex : 0,
       };
       return;
     }
@@ -164,10 +177,10 @@
 </div>
 
 <!-- Image Lightbox Modal Overlay -->
-{#if lightboxImage}
+{#if lightboxData}
   <Lightbox
-    src={lightboxImage.src}
-    alt={lightboxImage.alt}
-    onclose={() => (lightboxImage = null)}
+    images={lightboxData.images}
+    initialIndex={lightboxData.initialIndex}
+    onclose={() => (lightboxData = null)}
   />
 {/if}

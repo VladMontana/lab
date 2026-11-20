@@ -18,6 +18,7 @@
   --text-inverse: #ffffff;
 
   --accent: #2383e2;
+  --accent-color: var(--accent);
   --accent-hover: #1b6fc2;
   --accent-light: #e8f3fc;
 
@@ -43,6 +44,123 @@
   --shadow-lg: 0 12px 32px rgba(15, 15, 15, 0.15);
 
   --transition-fast: 0.15s ease;
+}
+
+/* ============================================================================
+   Dark Mode Design Tokens (Notion-Inspired Dark Theme)
+   ============================================================================ */
+
+html[data-theme="dark"] {
+  --bg-primary: #191919;
+  --bg-secondary: #202020;
+  --bg-tertiary: #2c2c2c;
+  --bg-hover: #2e2e2e;
+  --bg-active: #373737;
+  --border-color: #2f2f2f;
+  --border-dark: #404040;
+
+  --text-primary: #e6e6e5;
+  --text-secondary: #9b9a97;
+  --text-muted: #6f6e6b;
+  --text-inverse: #ffffff;
+
+  --accent: #529cca;
+  --accent-hover: #6cb8e6;
+  --accent-light: rgba(82, 156, 202, 0.15);
+
+  --color-danger: #ff6b6b;
+  --color-danger-bg: rgba(235, 87, 87, 0.18);
+  --color-success: #4cd964;
+  --color-success-bg: rgba(39, 174, 96, 0.18);
+  --color-warning: #f39c12;
+  --color-warning-bg: rgba(217, 115, 13, 0.18);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.65);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --bg-primary: #191919;
+    --bg-secondary: #202020;
+    --bg-tertiary: #2c2c2c;
+    --bg-hover: #2e2e2e;
+    --bg-active: #383838;
+    --border-color: #2f2f2f;
+    --border-dark: #404040;
+
+    --text-primary: #e6e6e5;
+    --text-secondary: #9b9a97;
+    --text-muted: #6f6e6b;
+    --text-inverse: #ffffff;
+
+    --accent: #529cca;
+    --accent-hover: #6cb8e6;
+    --accent-light: rgba(82, 156, 202, 0.15);
+
+    --color-danger: #ff6b6b;
+    --color-danger-bg: rgba(235, 87, 87, 0.18);
+    --color-success: #4cd964;
+    --color-success-bg: rgba(39, 174, 96, 0.18);
+    --color-warning: #f39c12;
+    --color-warning-bg: rgba(217, 115, 13, 0.18);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* Dark mode element refinements */
+html[data-theme="dark"] .markdown-body code {
+  color: #ff7b72;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .markdown-body code {
+    color: #ff7b72;
+  }
+}
+
+html[data-theme="dark"] .code-block-header {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .code-block-header {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+}
+
+html[data-theme="dark"] .markdown-body tr:hover td {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .markdown-body tr:hover td {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+}
+
+html[data-theme="dark"] .drawer-backdrop {
+  background-color: rgba(0, 0, 0, 0.65);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .drawer-backdrop {
+    background-color: rgba(0, 0, 0, 0.65);
+  }
+}
+
+html[data-theme="dark"] .markdown-image {
+  filter: brightness(0.93);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .markdown-image {
+    filter: brightness(0.93);
+  }
 }
 
 *, *::before, *::after {
@@ -1017,9 +1135,15 @@ input, textarea, select {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
   padding: 2rem;
   cursor: zoom-out;
+  animation: lightboxBackdropFade 0.2s ease-out both;
+}
+
+@keyframes lightboxBackdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .lightbox-container {
@@ -1029,6 +1153,7 @@ input, textarea, select {
   flex-direction: column;
   align-items: center;
   cursor: default;
+  position: relative;
 }
 
 .lightbox-image {
@@ -1037,6 +1162,54 @@ input, textarea, select {
   object-fit: contain;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-lg);
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform, opacity;
+}
+
+.lightbox-image.slide-next {
+  animation: lightboxSlideInNext 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lightbox-image.slide-prev {
+  animation: lightboxSlideInPrev 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lightbox-image.slide-initial {
+  animation: lightboxZoomIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes lightboxSlideInNext {
+  0% {
+    opacity: 0;
+    transform: translateX(32px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes lightboxSlideInPrev {
+  0% {
+    opacity: 0;
+    transform: translateX(-32px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes lightboxZoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .lightbox-caption {
@@ -1045,6 +1218,18 @@ input, textarea, select {
   font-size: 0.9rem;
   opacity: 0.85;
   text-align: center;
+  animation: lightboxCaptionFade 0.25s ease-out both;
+}
+
+@keyframes lightboxCaptionFade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 0.85;
+    transform: translateY(0);
+  }
 }
 
 .lightbox-close-btn {
@@ -1065,6 +1250,89 @@ input, textarea, select {
 
 .lightbox-close-btn:hover {
   background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Lightbox Navigation Buttons (Prev / Next Arrows) */
+.lightbox-nav-btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: all var(--transition-fast);
+  z-index: 1002;
+  cursor: pointer;
+  user-select: none;
+  backdrop-filter: blur(4px);
+  border: none;
+}
+
+.lightbox-nav-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.lightbox-nav-btn:active {
+  transform: translateY(-50%) scale(0.96);
+}
+
+.lightbox-nav-btn.prev {
+  left: 1.5rem;
+}
+
+.lightbox-nav-btn.next {
+  right: 1.5rem;
+}
+
+/* Lightbox Counter Badge */
+.lightbox-counter {
+  position: fixed;
+  top: 1.25rem;
+  left: 1.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-inverse);
+  font-size: 0.85rem;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+  user-select: none;
+  z-index: 1002;
+}
+
+
+@media (max-width: 768px) {
+  .lightbox-backdrop {
+    padding: 1rem;
+  }
+  .lightbox-nav-btn {
+    width: 42px;
+    height: 42px;
+    font-size: 1.25rem;
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+  .lightbox-nav-btn.prev {
+    left: 0.6rem;
+  }
+  .lightbox-nav-btn.next {
+    right: 0.6rem;
+  }
+  .lightbox-counter {
+    left: 1rem;
+    top: 1rem;
+    font-size: 0.8rem;
+  }
+  .lightbox-close-btn {
+    right: 1rem;
+    top: 1rem;
+  }
 }
 
 /* ============================================================================
