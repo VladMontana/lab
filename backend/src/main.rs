@@ -1,3 +1,6 @@
+//! LabNotes Web Platform Server
+//! Production Rust backend powered by Axum, Tokio and SQLite.
+
 use std::error::Error;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};

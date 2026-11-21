@@ -1,16 +1,19 @@
 # ==============================================================================
 # GitHub Linguist Configuration
-# Highlights Rust as the primary core language by excluding test suites & scripts
+# Highlights Rust as the primary language by excluding tests & tooling scripts
 # ==============================================================================
 
-# Exclude End-to-End and verification JavaScript test suites
-e2e_tests/** linguist-detectable=false
-e2e_tests/** linguist-vendored
-*.test.js linguist-detectable=false
+# All JS and MJS in this repository are test suites, runner scripts or config files
+*.js linguist-detectable=false
+*.js linguist-documentation
 *.mjs linguist-detectable=false
-frontend/test-* linguist-detectable=false
-verify_deployment_specs.mjs linguist-detectable=false
+*.mjs linguist-documentation
 
-# Exclude helper/build scripts and fixtures
+# Exclude e2e_tests directory completely
+e2e_tests/** linguist-vendored
+e2e_tests/** linguist-detectable=false
+e2e_tests/** linguist-documentation
+
+# Exclude fixtures and generator scripts
 frontend/scripts/** linguist-detectable=false
 frontend/test-fixtures/** linguist-detectable=false
