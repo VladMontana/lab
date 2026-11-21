@@ -499,6 +499,47 @@ input, textarea, select {
   font-size: 0.85rem;
 }
 
+.sidebar-author-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  margin-top: 0.4rem;
+  margin-bottom: 0.4rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.sidebar-author-badge:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-author-badge .github-svg {
+  flex-shrink: 0;
+  opacity: 0.75;
+  transition: opacity var(--transition-fast);
+}
+
+.sidebar-author-badge:hover .github-svg {
+  opacity: 1;
+}
+
+.sidebar-author-badge .badge-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-author-badge .external-arrow {
+  margin-left: auto;
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+
 .author-link {
   display: flex;
   align-items: center;
@@ -1192,6 +1233,54 @@ input, textarea, select {
 .attachment-download-icon {
   color: var(--text-secondary);
   font-size: 1rem;
+}
+
+/* Reader Footer Platform Attribution */
+.reader-footer-attribution {
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.reader-footer-attribution .attribution-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.reader-footer-attribution .platform-name {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.reader-footer-attribution .attribution-dot {
+  opacity: 0.5;
+}
+
+.reader-footer-attribution .attribution-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.reader-footer-attribution .attribution-link:hover {
+  color: var(--text-primary);
+}
+
+.reader-footer-attribution .github-svg {
+  flex-shrink: 0;
+  opacity: 0.75;
+  transition: opacity var(--transition-fast);
+}
+
+.reader-footer-attribution .attribution-link:hover .github-svg {
+  opacity: 1;
 }
 
 /* ============================================================================

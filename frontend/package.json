@@ -2,6 +2,8 @@
   "name": "labnotes-frontend",
   "private": true,
   "version": "0.1.0",
+  "author": "VladMontana",
+  "homepage": "https://github.com/VladMontana",
   "type": "module",
   "scripts": {
     "dev": "vite",
