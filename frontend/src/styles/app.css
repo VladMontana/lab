@@ -4,6 +4,7 @@
  */
 
 :root {
+  color-scheme: light;
   --bg-primary: #ffffff;
   --bg-secondary: #f7f6f3;
   --bg-tertiary: #f0efeb;
@@ -51,6 +52,7 @@
    ============================================================================ */
 
 html[data-theme="dark"] {
+  color-scheme: dark;
   --bg-primary: #191919;
   --bg-secondary: #202020;
   --bg-tertiary: #2c2c2c;
@@ -82,6 +84,7 @@ html[data-theme="dark"] {
 
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg-primary: #191919;
     --bg-secondary: #202020;
     --bg-tertiary: #2c2c2c;
@@ -196,7 +199,75 @@ button {
 input, textarea, select {
   font-family: inherit;
   font-size: inherit;
-  color: inherit;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+/* ============================================================================
+   Unified Button System
+   ============================================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  line-height: 1.4;
+  transition: background-color var(--transition-fast),
+              border-color var(--transition-fast),
+              color var(--transition-fast),
+              opacity var(--transition-fast);
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-inverse);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-dark);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--text-inverse);
+}
+
+.btn-danger:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ============================================================================

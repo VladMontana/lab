@@ -461,21 +461,23 @@
   }
 
   .btn-secondary {
-    background: var(--bg-primary, #ffffff);
-    border-color: var(--border-color, #e0e0e0);
+    background: var(--bg-secondary, #f7f6f3);
+    border-color: var(--border-dark, #e0e0e0);
     color: var(--text-primary, #37352f);
   }
 
   .btn-secondary:hover {
-    background: var(--bg-hover, #f7f6f3);
+    background: var(--bg-hover, #efeeea);
+    border-color: var(--text-secondary, #787774);
   }
 
   .btn-danger {
     background: var(--color-danger, #c5221f);
+    border-color: var(--color-danger, #c5221f);
     color: var(--text-inverse, #ffffff);
   }
 
   .btn-danger:hover {
-    opacity: 0.9;
+    opacity: 0.92;
   }
 </style>
