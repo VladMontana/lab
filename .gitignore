@@ -35,6 +35,12 @@ temp/
 tmp/
 *.tmp
 
+# Local tests & verification scripts (kept locally, not in git repo)
+e2e_tests/
+verify_deployment_specs.mjs
+frontend/test-*.mjs
+test-*.mjs
+
 # Logs
 *.log
 npm-debug.log*
